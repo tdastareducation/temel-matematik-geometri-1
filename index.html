@@ -593,6 +593,22 @@ body.drawing.t-select .ink.ov{cursor:move}
   <button id="next">Sonraki ›</button>
 </div>
 
+<script>
+(function(){
+ var SEL='input.g,#sola input,input.eqin';
+ window.__touchUI=function(){try{return matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0}catch(e){return false}};
+ function fieldAt(x,y){var L=document.elementsFromPoint?document.elementsFromPoint(x,y):[];for(var i=0;i<L.length;i++){var el=L[i];if(el.matches&&el.matches(SEL)&&!el.disabled&&!el.readOnly)return el}return null}
+ function focusField(f){if(document.activeElement!==f){try{f.focus({preventScroll:true})}catch(_){f.focus()}}try{var n=f.value.length;f.setSelectionRange(n,n)}catch(_){}}
+ /* a drawing layer above the page must not swallow taps on answer boxes */
+ window.__ansAt=function(e){if(e.pointerType==='pen')return null;var f=fieldAt(e.clientX,e.clientY);if(f){focusField(f);var up=function(){focusField(f);removeEventListener('pointerup',up,true)};addEventListener('pointerup',up,true)}return f};
+ function prep(root){(root||document).querySelectorAll&&(root||document).querySelectorAll(SEL).forEach(function(i){if(!i.hasAttribute('enterkeyhint'))i.setAttribute('enterkeyhint','done');if(!i.hasAttribute('inputmode'))i.setAttribute('inputmode','text')})}
+ document.addEventListener('DOMContentLoaded',function(){prep();new MutationObserver(function(m){m.forEach(function(r){r.addedNodes.forEach(function(n){if(n.nodeType===1){if(n.matches&&n.matches(SEL))prep(n.parentNode);else prep(n)}})})}).observe(document.body,{childList:true,subtree:true})});
+ /* keep the focused box visible above the on-screen keyboard */
+ document.addEventListener('focusin',function(e){var t=e.target;if(!t.matches||!t.matches(SEL)||!__touchUI())return;setTimeout(function(){try{t.scrollIntoView({block:'center',behavior:'smooth'})}catch(_){}},350)});
+ /* Enter / "done" on any answer box closes the keyboard; the answer stays */
+ document.addEventListener('keydown',function(e){var t=e.target;if((e.key==='Enter'||e.keyCode===13)&&t.matches&&t.matches(SEL)&&__touchUI()){e.preventDefault();e.stopPropagation();t.blur()}},true);
+})();
+</script>
 <script>window.STORY_BGM="audio/bgm.mp3";
 window.STORY_AUDIO={"cantor":{"src":"audio/cantor.mp3","t":[[0.03,5.07],[6.79,10.07],[11.85,14.41],[16.17,20.43],[23.49,34.85],[37.17,44.61],[47.27,55.49]]},"brahma":{"src":"audio/brahma.mp3","t":[[0,6.91],[8.73,16.29],[18.55,27.49],[29.47,32.65],[35.05,46.51],[48.67,54.79],[57.05,61.95]]},"descartes":{"src":"audio/descartes.mp3","t":[[0.01,4.79],[6.81,15.03],[17.11,20.81],[22.99,36.83],[38.81,47.33],[49.51,53.81],[55.89,66.47]]},"khwarizmi":{"src":"audio/khwarizmi.mp3","t":[[0,4.83],[6.99,13.19],[15.25,18.85],[20.93,25.81],[27.73,32.89],[34.73,39.13],[41.79,47.63]]},"dioph":{"src":"audio/dioph.mp3","t":[[0,7.75],[9.45,16.27],[18.65,24.77],[26.79,31.99],[35.07,41.01],[43.77,52.47],[55.21,59.45]]},"thales":{"src":"audio/thales.mp3","t":[[0.01,7.05],[8.71,12.47],[14.57,20.91],[23.05,25.17],[26.97,30.35],[32.27,36.87],[38.73,44.69]]},"euclid":{"src":"audio/euclid.mp3","t":[[0,5.39],[7.51,16.87],[19.09,23.77],[26.47,30.69],[32.81,37.51],[39.67,43.55],[46.03,52.03]]},"erat":{"src":"audio/erat.mp3","t":[[0,5.79],[7.51,12.69],[14.61,20.97],[22.99,28.57],[30.45,37.87],[40.39,46.93],[49.29,57.57]]}};</script>
 <script>
@@ -611,7 +627,7 @@ const I=t=>`<div class="box inf"><b>BİLGİ:</b> ${t}</div>`;
 const R=t=>`<div class="box rul"><b>KURAL:</b> ${t}</div>`;
 const W=(t,lab='DİKKAT:')=>`<div class="box wrn"><b>${lab}</b> ${t}</div>`;
 const L='abcdefghijklmnopqrstuvwxyz';
-const inp=(a,show,cls='')=>`<input class="g ${cls}" data-ans="${esc(a)}" data-show="${esc(show??String(a).split('|')[0])}" data-k="${K()}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="cevap">`;
+const inp=(a,show,cls='')=>`<input class="g ${cls}" data-ans="${esc(a)}" data-show="${esc(show??String(a).split('|')[0])}" data-k="${K()}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="cevap">`;
 const it=(l,e,a,show)=>`<div class="it"><b>${l}.</b><span class="ex">${e} =</span>${inp(a,show)}</div>`;
 const items=(arr,num=0)=>`<div class="items">${arr.map((x,i)=>it(num?num+i:L[i],x[0],x[1],x[2])).join('')}</div>`;
 const Q=(ex,n,t,inner)=>`<div class="q" data-ex="${esc(ex)}" data-n="${n}">${t?`<h4>${n}. ${t}</h4>`:''}${inner}<div class="qbar"><button class="chk">✔ Kontrol et</button><button class="shw">👁 Cevapları göster</button><button class="rst" title="Temizle">↺</button><span class="sc"></span></div></div>`;
@@ -1211,7 +1227,7 @@ const decAlt=a=>{const m=String(a).match(/^(–?)(\d+)\/(\d+)$/);if(!m)return a;
 const eqi=(l,src,ans)=>`<div class="it eqit" data-eq="${esc(src)}"><b>${l}.</b><span class="ex">${fx(src)}</span><span class="xl">x =</span>${inp(decAlt(ans))}</div>`;
 const phi=(l,t,ans)=>`<div class="it" data-ph="${esc(t)}"><b>${l}.</b><span class="ex">${fx(t)} =</span>${inp(decAlt(ans))}</div>`;
 const wqi=(l,t,ans,eq,xl)=>`<div class="it wq" data-weq="${esc(eq)}" data-wt="${esc(t)}"><b>${l}.</b><span class="tx">${fx(t)}</span>${xl?'':'<span class="xl">x =</span>'}${inp(decAlt(ans))}</div>`;
-const weqi=(l,t,eq)=>{const v=EQ.solve(eq).x;return `<div class="it wq" data-wt="${esc(t)}" data-weq="${esc(eq)}" data-kind0="writeeq"><b>${l}.</b><span class="tx">${fx(t)}</span><input class="g wide eqin" data-chk="eq" data-tn="${v.n}" data-td="${v.d}" data-ans="${esc(eq)}" data-show="${esc(eq.replace(/\[\[([^;\]]+);([^\]]+)\]\]/g,'$1/$2'))}" data-k="${K()}" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="… = …" aria-label="denklem"></div>`};
+const weqi=(l,t,eq)=>{const v=EQ.solve(eq).x;return `<div class="it wq" data-wt="${esc(t)}" data-weq="${esc(eq)}" data-kind0="writeeq"><b>${l}.</b><span class="tx">${fx(t)}</span><input class="g wide eqin" data-chk="eq" data-tn="${v.n}" data-td="${v.d}" data-ans="${esc(eq)}" data-show="${esc(eq.replace(/\[\[([^;\]]+);([^\]]+)\]\]/g,'$1/$2'))}" data-k="${K()}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="… = …" aria-label="denklem"></div>`};
 const rli=(n,o)=>`<div class="it rl" data-sol="${esc(o.s)}" data-ans0="${esc(o.a)}" data-unit="${esc(o.u)}" data-n="${n}" data-wt="${esc(o.t)}"><b>${n}.</b><span class="tx">${fx(o.t)}</span>${inp(decAlt(o.a))}${o.u?`<span class="unit">${o.u}</span>`:''}</div>`;
 const mcq=(n,q,ch,ex)=>`<div class="it mcq" data-sol="${esc(q.s)}" data-ch="${ch}" data-exn="${ex.n}" data-hard="${(/Mixed|Challenge|Karma|Zorlu/.test(ex.title)||(ch==8&&ex.n>=3))?1:0}"><b>${n}.</b><div class="mqb">${q.f?fg(q.f,250):''}<p class="tx">${q.t}</p><span class="tf mc g" data-ans="${q.a}" data-show="${q.a}) ${esc(q.o[q.a])}" data-k="${K()}">${'ABCD'.split('').map(k=>`<button data-v="${k}"><i>${k})</i> ${q.o[k]}</button>`).join('')}</span></div></div>`;
 const exGrid=list=>`<div class="exg">${list.map(([t,f,s])=>`<div class="box exm"><b>${t.split(':')[0]}:</b>${t.slice(t.indexOf(':')+1)}${f?`<br>${fg(f,250)}`:''}<br><b class="sl">Çözüm:</b><br>${s.join('<br>')}</div>`).join('')}</div>`;
@@ -1357,7 +1373,7 @@ ${E(`20'nin yarısından 7 eksik<br>Önce: 20'nin yarısı → ${fr(20,2)} = 10<
 ${E(`9'un ${fr(2,3)}'sinden 4 fazla<br>Önce: 9'un ${fr(2,3)}'si → ${fr(9,3)} × 2 = 6<br>Sonra: 6'dan 4 fazla → 6 + 4 = 10`)}`,null);
 P[P.length-1].sub=[['5.6. Karışık Sayı Problemleri',2]];
 
-(function(){const wqe=(l,t,eq)=>{const v=EQ.solve(eq).x,a='x = '+EQ.fs(v);return `<div class="it wq" data-weq="${esc(eq)}" data-wt="${esc(t)}"><b>${l}.</b><span class="tx">${fx(t)}</span><input class="g wide eqin" data-chk="eq" data-tn="${v.n}" data-td="${v.d}" data-ans="${esc(a)}" data-show="${esc(a)}" data-k="${K()}" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="… = …" aria-label="denklem"></div>`};CH5EX.forEach(ex=>{const exk=`5. Bölüm · Alıştırma ${ex.n}`;let first=true;
+(function(){const wqe=(l,t,eq)=>{const v=EQ.solve(eq).x,a='x = '+EQ.fs(v);return `<div class="it wq" data-weq="${esc(eq)}" data-wt="${esc(t)}"><b>${l}.</b><span class="tx">${fx(t)}</span><input class="g wide eqin" data-chk="eq" data-tn="${v.n}" data-td="${v.d}" data-ans="${esc(a)}" data-show="${esc(a)}" data-k="${K()}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="… = …" aria-label="denklem"></div>`};CH5EX.forEach(ex=>{const exk=`5. Bölüm · Alıştırma ${ex.n}`;let first=true;
   ex.qs.forEach(q=>{const off=q.start?L.indexOf(q.start):0;
    const html=q.items.map((it,i)=>{const l=L[off+i];
     if(q.mode==='phrase')return phi(l,it[0],it[1]);
@@ -1632,7 +1648,7 @@ function updScore(){const all=document.querySelectorAll('.g').length;const ok=Ob
 updScore();
 
 book.addEventListener('input',e=>{const g=e.target.closest('input.g');if(!g)return;g.classList.remove('ok','bad');const s=g.nextElementSibling;if(s&&s.classList.contains('sol'))s.remove();S.v[g.dataset.k]=g.value;delete S.res[g.dataset.k];save()});
-book.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input.g')){e.preventDefault();const q=e.target.closest('.q');const ins=[...q.querySelectorAll('input.g')];const n=ins[ins.indexOf(e.target)+1];n?n.focus():q.querySelector('.chk').click()}});
+book.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input.g')){e.preventDefault();if(window.__touchUI&&__touchUI()){e.target.blur();return}const q=e.target.closest('.q');const ins=[...q.querySelectorAll('input.g')];const n=ins[ins.indexOf(e.target)+1];n?n.focus():q.querySelector('.chk').click()}});
 book.addEventListener('click',e=>{
  const b=e.target.closest('button');const svg=e.target.closest('svg.nl');
  if(svg&&!svg.classList.contains('hid')||svg&&svg.classList.contains('rev')){replay(svg);return}
@@ -2327,7 +2343,7 @@ const WB=(()=>{
   for(const P of polys){if(P.length===1&&d2(P[0],q)<r*r*4)return true;for(let i=1;i<P.length;i++)if(seg(P[i-1],P[i])<r*r*2.5)return true}return false}
  function erase(q){const d=data(pi);const keep=d.strokes.filter(s=>!hit(s,q));if(keep.length!==d.strokes.length){d.strokes=keep;if(drawing)drawing.changed=true;redraw();return true}return false}
  function bind(c){
-  c.addEventListener('pointerdown',e=>{if(st.tool==='cursor')return;e.preventDefault();if(snapCand)snapHide();if(st.tool!=='select')fly.hidden=true;c.setPointerCapture(e.pointerId);let q=pos(e);
+  c.addEventListener('pointerdown',e=>{if(st.tool==='cursor')return;if(window.__ansAt&&__ansAt(e)){e.preventDefault();return}e.preventDefault();if(snapCand)snapHide();if(st.tool!=='select')fly.hidden=true;c.setPointerCapture(e.pointerId);let q=pos(e);
    if(st.tool==='select'){pruneSel();const L=data(pi).strokes;let h=null;for(let i=L.length-1;i>=0;i--){if(L[i].t!=='er'&&hit(L[i],q)){h=L[i];break}}
     if(!h){const b=sel.size?bunion([...sel]):null;if(b&&!(e.ctrlKey||e.metaKey||e.shiftKey)&&q[0]>=b[0]&&q[0]<=b[2]&&q[1]>=b[1]&&q[1]<=b[3])h=[...sel][0]}
     const add=e.ctrlKey||e.metaKey||e.shiftKey;
@@ -2436,7 +2452,7 @@ const SOLP=(()=>{
   scrollTo(0,savedScroll);const u=unit;unit=null;u.classList.add('now');setTimeout(()=>u.classList.remove('now'),1200)}
  abox.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const g=b.closest('.tf,.sets,.grid');if(!g)return;
   if(g.classList.contains('tf'))g.querySelectorAll('button').forEach(x=>x.classList.toggle('sel',x===b));else b.classList.toggle('sel')});
- abox.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input')){e.preventDefault();back()}});
+ abox.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input')){e.preventDefault();if(window.__touchUI&&__touchUI()){e.target.blur();return}back()}});
  document.getElementById('solback').addEventListener('click',back);
  const stg=document.getElementById('snapTg');const stgUI=()=>{const on=WB.snap();stg.classList.toggle('off',!on);stg.querySelector('b').textContent=on?'AÇIK':'KAPALI'};stg.addEventListener('click',()=>{WB.snap(!WB.snap());stgUI()});stgUI();
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden&&!document.body.classList.contains('drawing'))back()});
