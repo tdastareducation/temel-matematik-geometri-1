@@ -524,6 +524,22 @@ body.drawing.t-select .ink.ov{cursor:move}
 .snapq .sy{background:#16a34a;color:#fff}.snapq .sn{background:#f1f5f9;color:#475569}
 @keyframes snapin{from{opacity:0;transform:translateY(4px)}}
 @media(max-width:600px){.snaptg{padding:7px 9px;font-size:12px}}
+
+.thb{font-size:16px;line-height:1;margin-right:2px}.thb .th-sun{display:none}
+html.dark .thb .th-sun{display:inline}html.dark .thb .th-moon{display:none}
+html.dark,html.dark body{background:#11161f!important;color-scheme:dark}
+html.dark #bgfx{opacity:.28}
+html.dark .top{background:#1a212d;box-shadow:0 1px 8px rgba(0,0,0,.5)}
+html.dark .top .ttl{color:#7fd08a}html.dark #pg{color:#a9b3c2}
+html.dark .ib,html.dark .fsb{background:#2a3343;color:#e8ebf0}
+html.dark #drawer{background:#1a212d;color:#e8ebf0}
+html.dark #drawer h3,html.dark .tocl a{color:#e8ebf0}html.dark .tocl a.l1{color:#c3cad6}html.dark .tocl a.l2{color:#a9b3c2}
+html.dark .tocl a:hover{background:#263043}html.dark .tocl a.cur{background:#21402a}html.dark .tocl a.ch{color:#8fd694}
+html.dark .page{filter:invert(1) hue-rotate(180deg)}
+html.dark .page img,html.dark .page .fig,html.dark .page canvas.ink,html.dark .page video,html.dark .page picture{filter:invert(1) hue-rotate(180deg)}
+html.dark .nav{background:linear-gradient(transparent,rgba(17,22,31,.95) 35%)}
+html.dark .nav .mid{background:#2a3343;color:#e8ebf0}
+@media (pointer:coarse){input.g,.sola input,input.eqin{font-size:max(16px,1em);touch-action:manipulation}}
 </style>
 </head>
 <body>
@@ -532,12 +548,14 @@ body.drawing.t-select .ink.ov{cursor:move}
   <button class="ib" id="menuBtn" aria-label="İçindekiler">☰</button>
   <div class="ttl" id="ttl"></div>
   <span id="pg"></span>
+  <button class="fsb thb" id="thBtn" aria-label="Koyu / açık arka plan" title="Koyu / açık arka plan"><span class="th-moon">🌙</span><span class="th-sun">☀️</span></button>
   <button class="fsb" id="fsBtn" aria-label="Tam ekran" title="Tam ekran (F)"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-in" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path class="fs-out" d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg></button>
 </header>
 <div id="scrim"></div>
 <aside id="drawer" aria-label="İçindekiler">
   <h3>İçindekiler</h3>
   <div id="score"></div>
+  <label class="fxsw"><input type="checkbox" id="thon"> 🌙 Koyu arka plan</label>
   <label class="fxsw"><input type="checkbox" id="fxon" checked> ✨ Hareketli arka plan</label>
   <label class="spd">🔊 Hız <input type="range" id="rate" min="0.6" max="1.3" step="0.05" value="0.9"></label>
   <nav class="tocl" id="toc"></nav>
@@ -593,6 +611,25 @@ body.drawing.t-select .ink.ov{cursor:move}
   <button id="next">Sonraki ›</button>
 </div>
 
+<script>
+(function(){
+ var K='emag1-tr-theme',de=document.documentElement;
+ function get(){try{return localStorage.getItem(K)}catch(e){return null}}
+ function set(d){de.classList.toggle('dark',d);try{localStorage.setItem(K,d?'dark':'light')}catch(e){}var c=document.getElementById('thon');if(c)c.checked=d}
+ if(get()==='dark')de.classList.add('dark');
+ document.addEventListener('DOMContentLoaded',function(){var b=document.getElementById('thBtn'),c=document.getElementById('thon');
+  if(c){c.checked=de.classList.contains('dark');c.addEventListener('change',function(){set(c.checked)})}
+  if(b)b.addEventListener('click',function(){set(!de.classList.contains('dark'))})});
+ /* tap on an answer box (or on its question row) always gives the box focus inside the tap itself, so the phone keyboard opens */
+ var SEL='input.g,#sola input,input.eqin';
+ function own(t){if(!t||!t.closest)return null;var f=t.closest(SEL);if(f)return f;
+  var row=t.closest('.it');if(row&&!t.closest('button,a,svg,.pan,.sol,.qbar,.wsb')){var ins=row.querySelectorAll('input.g');if(ins.length===1)return ins[0]}return null}
+ function tap(e){var f=own(e.target);if(!f||f.disabled||f.readOnly)return;if(document.body.classList.contains('drawing')&&!e.target.closest(SEL))return;
+  if(document.activeElement!==f){try{f.focus()}catch(_){}}}
+ document.addEventListener('touchend',tap,{capture:true,passive:true});
+ document.addEventListener('click',tap,true);
+})();
+</script>
 <script>
 (function(){
  var SEL='input.g,#sola input,input.eqin';
